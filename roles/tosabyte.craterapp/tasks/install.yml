@@ -1,0 +1,49 @@
+---
+
+- name: Clone craterapp from repository
+  git:
+    repo: "{{ crater_repo_url }}"
+    dest: "{{ crater_base_dir }}"
+    version: "{{ crater_version }}"
+
+- name: Install craterapp dependencies
+  composer:
+    command: install
+    working_dir: "{{ crater_base_dir }}"
+    no_dev: false
+
+- name: Set craterapp env file
+  template:
+    src: crater_env.j2
+    dest: "{{ crater_base_dir }}/.env"
+    owner: "{{ crater_web_user }}"
+    group: "{{ crater_web_group }}"
+  register: createapp_env
+
+- name: Generate application key
+  command: php artisan key:generate --env .env
+  args:
+    chdir: "{{ crater_base_dir }}"
+  when: createapp_env.changed
+
+- name: Generate passport keys for authentication
+  command: php artisan passport:keys
+  args:
+    chdir: "{{ crater_base_dir }}"
+  when: createapp_env.changed  
+
+- name: Adjust directory ownership
+  file:
+    path: "{{ crater_base_dir }}"
+    recurse: yes
+    owner: "{{ crater_web_user }}"
+    group: "{{ crater_web_group }}"
+
+- name: Fix storage dir permission
+  file:
+    path: "{{ crater_base_dir }}/{{ item }}"
+    mode: 0775
+  loop:
+    - storage/framework/
+    - storage/logs/
+    - bootstrap/cache/

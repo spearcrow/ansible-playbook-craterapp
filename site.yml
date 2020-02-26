@@ -1,0 +1,62 @@
+---
+
+- name: Install CraterApp on Linux Servers
+  hosts: craterapp
+  remote_user: root
+
+  vars:
+
+    php_version: "7.3"
+
+    mysql_databases:
+      - name: "{{ crater_db_name }}"
+    mysql_users:
+      - name: "{{ crater_db_user }}"
+        host: "{{ crater_db_host }}"
+        password: "{{ crater_db_pass }}"
+        priv: "{{ crater_db_name }}.*:ALL"
+
+    mysql_packages:
+      - MariaDB-server
+      - MariaDB-client
+
+    php_packages_extra:
+      - composer
+      - php-devel
+      - php-mysqlnd
+      - php-xml
+
+    nodejs_package_json_path: "{{ crater_base_dir }}"
+
+    apache_vhosts:
+      - servername: "{{ crater_app_url }}"
+        documentroot: "{{ crater_base_dir }}/public"
+
+  pre_tasks:
+
+    - name: Install MariaDB repository
+      yum_repository:
+        name: mariadb
+        description: MariaDB
+        baseurl: http://yum.mariadb.org/10.3/centos7-amd64
+        gpgcheck: true
+        gpgkey: https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+
+    - name: Override variables for MySQL (RedHat).
+      set_fact:
+        mysql_log_error: /var/lib/mysql/{{ ansible_fqdn }}.err
+        mysql_pid_file: /var/lib/mysql/{{ ansible_fqdn }}.pid
+        mysql_socket: /var/lib/mysql/mysql.sock
+
+  roles:
+
+    - geerlingguy.repo-epel
+    - geerlingguy.repo-remi
+    - geerlingguy.git
+    - geerlingguy.apache
+    - geerlingguy.mysql
+    - geerlingguy.php-versions
+    - geerlingguy.php
+    - tosabyte.craterapp
+    - geerlingguy.nodejs
+  

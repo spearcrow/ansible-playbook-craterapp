@@ -1,0 +1,13 @@
+---
+
+crater_repo_url: "https://github.com/bytefury/crater.git"
+crater_version: "master"
+
+crater_base_dir: "/var/www/html"
+crater_app_url: "http://crater.test"
+
+crater_db_port: 3306
+crater_db_host: "localhost"
+crater_db_name: "crater"
+crater_db_user: "crater"
+crater_db_pass: "password"
